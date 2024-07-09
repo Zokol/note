@@ -3,9 +3,94 @@
 
 <head>
     <title>NetNote</title>
+
+    <style>
+        body {
+            background-color: #000;
+            /* Black background */
+            color: #ff5555;
+            max-width: 700px;
+            margin: 0 auto;
+            /* Neon red text */
+            font-family: 'Courier New', Courier, monospace;
+            /* Cyberpunk-ish font */
+        }
+
+        h1 {
+            color: #ff5555;
+            text-align: center;
+            text-shadow: 0 0 10px #ff5555;
+            /* Glowing effect */
+        }
+
+        textarea {
+            background-color: #222;
+            /* Dark background for textarea */
+            color: #ff5555;
+            /* Neon red text color */
+            border: 1px solid #ff5555;
+            /* Red border */
+            padding: 10px;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        input[type="submit"] {
+            background-color: #ff5555;
+            /* Red background */
+            color: #fff;
+            /* White text */
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+            /* Smooth transition for hover effect */
+        }
+
+        input[type="submit"]:hover {
+            background-color: #ff0000;
+            /* Slightly darker red on hover */
+        }
+
+        /* Centering the button */
+        div {
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
+
     <script>
         // Create a new WebSocket.
         var socket = new WebSocket('ws://example.fi/dev/null:80');
+
+        // Listen for form submit event
+        document.getElementById('message_form').addEventListener('submit', function (event) {
+            // Prevent the form from submitting normally
+            event.preventDefault();
+
+            // Get the text input's value
+            var text = document.getElementById('message').value;
+
+            // Send the text to the server
+            socket.send(text);
+
+            // Clear the text area after sending the message
+            document.getElementById('message').value = '';
+        });
+
+        // Focus the text area when the page loads
+        window.onload = function () {
+            document.getElementById('message').focus();
+        };
+
+        // Send message when Enter is pressed, but not when Shift + Enter is pressed
+        document.getElementById('message').addEventListener('keydown', function (event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                console.log('Enter pressed');
+                event.preventDefault(); // Prevent default Enter behavior, which is to submit the form
+                document.getElementById('message_form').dispatchEvent(new Event('submit')); // Programmatically submit the form
+            }
+        });
 
         // Connection opened
         socket.addEventListener('open', function (event) {
@@ -42,7 +127,19 @@
     <h1>NetNote</h1>
 
     This is simple websocket application to send text messages.
+    <br>
     Purpose of this tool is to allow users to append text messages to the network traffic of their local network.
+
+    <hr>
+
+    <form id="message_form" style="margin-top: 50px; margin-bottom: 50px;">
+        <div style="text-align: center;">
+            <textarea id="message" name="message" style="height: 50%; width: 90%;" rows="4"
+                placeholder="YOUR MESSAGE HERE, PRESS ENTER TO SEND"></textarea>
+            <br>
+            <input type="submit" value="Send" style="font-size: xx-large; width: 50%">
+        </div>
+    </form>
 
     <hr>
 
@@ -50,7 +147,10 @@
 
     By default, this form sends the contents to `example.fi`, but you can change the address to anything you wish, or
     select "random" to randomize the domain each time the message is sent.
-    Type something to the input field and press "Send" to send it
+    <br>
+    <br>
+    Start by monitoring your network traffic, for example using TCPdump. Then type something to the input field and
+    press "Send" to send it.
 
     <hr>
 
@@ -58,13 +158,30 @@
 
     There is no encryption applied on the sent message. This means that everything you type is sent in plain text. This
     is a security risk, as anyone can read the messages you send.
-    However, this is a feature, not a bug. The purpose of this tool is to allow users to append text messages to their
+    <br>
+    <br>
+    However, this is a feature, not a bug. The purpose of
+    this tool is to allow users to append text messages to their
     network traffic. Encrypting this traffic would be counterproductive.
 
-    <form id="message_form">
-        <input type="text" id="message" name="message">
-        <input type="submit" value="Send">
-    </form>
+    <hr>
+
+    <h2>What is this for?</h2>
+
+    I needed a tool to track user actions in the network while testing new equipment and configurations.
+    <br>
+    <br>
+    This tool allows me to insert notes into the local network, which can be read from the network traffic. This way I
+    can create correlation between actions I took as a user and changes in the network traffic.
+    <br>
+    <br>
+    Example messages I often send are something like "Started registration" or "Clicked 'Add user'-button"
+
+    <hr>
+
+    <h2>More info</h2>
+
+    <a href="https://github.com/Zokol/note.github.io">https://github.com/Zokol/note.github.io</a>
 
 </body>
 
