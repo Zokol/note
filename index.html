@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>NetNote</title>
+    <script>
+        // Create a new WebSocket.
+        var socket = new WebSocket('ws://example.fi/dev/null:80');
+
+        // Connection opened
+        socket.addEventListener('open', function (event) {
+            console.log('WebSocket is open now.');
+        });
+
+        // Connection closed
+        socket.addEventListener('close', function (event) {
+            console.log('WebSocket is closed now.');
+        });
+
+        // Connection error
+        socket.addEventListener('error', function (event) {
+            console.log('WebSocket error: ', event);
+        });
+
+        // Listen for form submit event
+        document.getElementById('message_form').addEventListener('submit', function (event) {
+            // Prevent the form from submitting normally
+            event.preventDefault();
+
+            // Get the text input's value
+            var text = document.getElementById('message').value;
+
+            // Send the text to the server
+            socket.send(text);
+        });
+    </script>
+
+</head>
+
+<body>
+
+    <h1>NetNote</h1>
+
+    This is simple websocket application to send text messages.
+    Purpose of this tool is to allow users to append text messages to the network traffic of their local network.
+
+    <hr>
+
+    <h2>How it works?</h2>
+
+    By default, this form sends the contents to `example.fi`, but you can change the address to anything you wish, or
+    select "random" to randomize the domain each time the message is sent.
+    Type something to the input field and press "Send" to send it
+
+    <hr>
+
+    <h2>Is it safe?</h2>
+
+    There is no encryption applied on the sent message. This means that everything you type is sent in plain text. This
+    is a security risk, as anyone can read the messages you send.
+    However, this is a feature, not a bug. The purpose of this tool is to allow users to append text messages to their
+    network traffic. Encrypting this traffic would be counterproductive.
+
+    <form id="message_form">
+        <input type="text" id="message" name="message">
+        <input type="submit" value="Send">
+    </form>
+
+</body>
+
+</html>
