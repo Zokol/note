@@ -97,9 +97,7 @@
 
     <h1>NetNote</h1>
 
-    This is simple websocket application to send text messages over network.
-    <br><br>
-    Purpose of this tool is to allow users to append text messages to the network traffic of their local network.
+    Send text messages over network
 
     <hr>
 
@@ -130,10 +128,12 @@
     <!-- Send Method Selection -->
     <fieldset>
         <legend>Send Method:</legend>
-        <label><input type="radio" name="sendMethod" value="websocket" checked> WebSocket</label>
-        <label><input type="radio" name="sendMethod" value="POST"> HTTP POST</label>
-        <label><input type="radio" name="sendMethod" value="GET"> HTTP GET</label>
-        <label><input type="radio" name="sendMethod" value="OPTIONS"> HTTP OPTIONS</label>
+        <label><input type="radio" name="sendMethod" value="websocket"> WebSocket</label>
+        <label><input type="radio" name="sendMethod" value="POST" checked> HTTP POST</label>
+        <!--
+        <label><input type="radio" name="sendMethod" value="GET" disabled> HTTP GET</label>
+        <label><input type="radio" name="sendMethod" value="OPTIONS" disabled> HTTP OPTIONS</label>
+        -->
     </fieldset>
 
     <!-- Domain Selection -->
@@ -147,6 +147,23 @@
     </fieldset>
 
     <hr>
+
+    <h2>What is this for?</h2>
+
+    I needed a tool to track user actions while testing new equipment and configurations.
+    <br>
+    <br>
+    This tool allows me to inject notes into the local network traffic, which I monitor with TCPdump or Wireshark.
+    By filtering the notes from the traffic, I can create correlation between actions I took as a user and resulting
+    changes in the network traffic
+    <br>
+    <br>
+    Example messages I often send with this tool are something like "Started registration" or "Rebooted device"
+    <hr>
+
+    <h2>How to see the notes in network traffic?</h2>
+
+
 
     <h2>How it works?</h2>
 
@@ -165,22 +182,8 @@
     is a security risk, as anyone can read the messages you send.
     <br>
     <br>
-    However, this is a feature, not a bug. The purpose of
-    this tool is to allow users to append text messages to their
+    However, this is a feature, not a bug. The purpose of this tool is to allow users to append text messages to their
     network traffic. Encrypting this traffic would be counterproductive.
-
-    <hr>
-
-    <h2>What is this for?</h2>
-
-    I needed a tool to track user actions in the network while testing new equipment and configurations.
-    <br>
-    <br>
-    This tool allows me to insert notes into the local network, which can be read from the network traffic. This way I
-    can create correlation between actions I took as a user and changes in the network traffic.
-    <br>
-    <br>
-    Example messages I often send are something like "Started registration" or "Clicked 'Add user'-button"
 
     <hr>
 
@@ -306,6 +309,7 @@
             headers: {
                 'Content-Type': 'application/json',
             },
+            mode: 'no-cors',
             body: JSON.stringify(data),
         })
             .then(response => response.json())
