@@ -52,73 +52,44 @@
             /* Slightly darker red on hover */
         }
 
-        /* Centering the button */
+        /* Centering the send-button */
         div {
             text-align: center;
             margin-top: 10px;
         }
+
+        /* Styling for the log table */
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 8px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #111;
+        }
+
+        th {
+            background-color: #ff5555;
+            color: white;
+        }
+
+        /* Styling for the log table container */
+        .table-container {
+            /* Adjust the height as needed */
+            height: 200px;
+            /* Enables vertical scrolling if the content is taller than the container */
+            overflow-y: auto;
+            /* Optional: ensures the container width matches its parent */
+            width: 100%;
+            background-color: #222;
+        }
     </style>
-
-    <script>
-        // Create a new WebSocket.
-        var socket = new WebSocket('ws://example.fi/dev/null:80');
-
-        // Listen for form submit event
-        document.getElementById('message_form').addEventListener('submit', function (event) {
-            // Prevent the form from submitting normally
-            event.preventDefault();
-
-            // Get the text input's value
-            var text = document.getElementById('message').value;
-
-            // Send the text to the server
-            socket.send(text);
-
-            // Clear the text area after sending the message
-            document.getElementById('message').value = '';
-        });
-
-        // Focus the text area when the page loads
-        window.onload = function () {
-            document.getElementById('message').focus();
-        };
-
-        // Send message when Enter is pressed, but not when Shift + Enter is pressed
-        document.getElementById('message').addEventListener('keydown', function (event) {
-            if (event.key === 'Enter' && !event.shiftKey) {
-                console.log('Enter pressed');
-                event.preventDefault(); // Prevent default Enter behavior, which is to submit the form
-                document.getElementById('message_form').dispatchEvent(new Event('submit')); // Programmatically submit the form
-            }
-        });
-
-        // Connection opened
-        socket.addEventListener('open', function (event) {
-            console.log('WebSocket is open now.');
-        });
-
-        // Connection closed
-        socket.addEventListener('close', function (event) {
-            console.log('WebSocket is closed now.');
-        });
-
-        // Connection error
-        socket.addEventListener('error', function (event) {
-            console.log('WebSocket error: ', event);
-        });
-
-        // Listen for form submit event
-        document.getElementById('message_form').addEventListener('submit', function (event) {
-            // Prevent the form from submitting normally
-            event.preventDefault();
-
-            // Get the text input's value
-            var text = document.getElementById('message').value;
-
-            // Send the text to the server
-            socket.send(text);
-        });
-    </script>
 
 </head>
 
@@ -126,11 +97,22 @@
 
     <h1>NetNote</h1>
 
-    This is simple websocket application to send text messages.
-    <br>
+    This is simple websocket application to send text messages over network.
+    <br><br>
     Purpose of this tool is to allow users to append text messages to the network traffic of their local network.
 
     <hr>
+
+    <!-- Log table -->
+    <div class="table-container">
+        <table id="logTable" style="width:100%; color: #ff5555;">
+            <tr>
+                <!-- <th>Timestamp</th>
+                <th>Message</th>-->
+            </tr>
+            <!-- Log rows will be added here dynamically -->
+        </table>
+    </div>
 
     <form id="message_form" style="margin-top: 50px; margin-bottom: 50px;">
         <div style="text-align: center;">
@@ -140,6 +122,29 @@
             <input type="submit" value="Send" style="font-size: xx-large; width: 50%">
         </div>
     </form>
+
+    <hr>
+
+    <h2>Settings</h2>
+
+    <!-- Send Method Selection -->
+    <fieldset>
+        <legend>Send Method:</legend>
+        <label><input type="radio" name="sendMethod" value="websocket" checked> WebSocket</label>
+        <label><input type="radio" name="sendMethod" value="POST"> HTTP POST</label>
+        <label><input type="radio" name="sendMethod" value="GET"> HTTP GET</label>
+        <label><input type="radio" name="sendMethod" value="OPTIONS"> HTTP OPTIONS</label>
+    </fieldset>
+
+    <!-- Domain Selection -->
+    <fieldset>
+        <legend>Domain:</legend>
+        <label><input type="radio" name="domainSelection" value="example.fi:42004" checked>
+            example.fi:42004</label>
+        <label><input type="radio" name="domainSelection" value="localhost:80"> localhost</label>
+        <label><input type="radio" name="domainSelection" value="custom"> Custom Domain:</label>
+        <input type="text" id="customDomain" placeholder="example.com:80" disabled>
+    </fieldset>
 
     <hr>
 
@@ -184,5 +189,165 @@
     <a href="https://github.com/Zokol/note.github.io">https://github.com/Zokol/note.github.io</a>
 
 </body>
+
+
+
+<script>
+
+    // Create a new WebSocket.
+    let domain = document.querySelector('input[name="domainSelection"]:checked').value;
+    var socket = new WebSocket('ws://' + domain);
+
+    // Focus the text area when the page loads
+    window.onload = function () {
+        document.getElementById('message').focus();
+    };
+
+    // Send message when Enter is pressed, but not when Shift + Enter is pressed
+    document.getElementById('message').addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            console.log('Enter pressed');
+            event.preventDefault(); // Prevent default Enter behavior, which is to submit the form
+            document.getElementById('message_form').dispatchEvent(new Event('submit')); // Programmatically submit the form
+        }
+    });
+
+    // Connection opened
+    socket.addEventListener('open', function (event) {
+        console.log('WebSocket is open now.');
+    });
+
+    // Connection closed
+    socket.addEventListener('close', function (event) {
+        console.log('WebSocket is closed now.');
+    });
+
+    // Connection error
+    socket.addEventListener('error', function (event) {
+        console.log('WebSocket error: ', event);
+    });
+
+    // Enable the custom domain text input when the corresponding radio button is selected
+    document.querySelectorAll('input[name="domainSelection"]').forEach(radio => {
+        radio.addEventListener('change', function () {
+            document.getElementById('customDomain').disabled = this.value !== 'custom';
+        });
+    });
+
+    // Close socket when non-websocket option is selected, and reopen it when websocket is selected
+    document.querySelectorAll('input[name="sendMethod"]').forEach(radio => {
+        radio.addEventListener('change', function () {
+            if (this.value === 'websocket') {
+                let domain = document.querySelector('input[name="domainSelection"]:checked').value;
+                if (domain === 'custom') {
+                    domain = document.getElementById('customDomain').value;
+                }
+                socket = new WebSocket('ws://' + domain);
+            } else {
+                socket.close();
+            }
+        });
+    });
+
+    // Recreate websocket if websocket-option is enabled and user changes the domain
+    document.querySelectorAll('input[name="domainSelection"]').forEach(radio => {
+        radio.addEventListener('change', function () {
+            if (document.querySelector('input[name="sendMethod"]:checked').value === 'websocket') {
+                let domain = document.querySelector('input[name="domainSelection"]:checked').value;
+                if (domain === 'custom') {
+                    domain = document.getElementById('customDomain').value;
+                }
+                socket.close(); // Close the existing socket
+                socket = new WebSocket('ws://' + domain); // Create a new socket
+            }
+        });
+    });
+
+    // Update the form submit event listener
+    document.getElementById('message_form').addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        // Determine the selected send method
+        const sendMethod = document.querySelector('input[name="sendMethod"]:checked').value;
+
+        // Determine the selected domain or custom domain
+        let domain = document.querySelector('input[name="domainSelection"]:checked').value;
+        if (domain === 'custom') {
+            domain = document.getElementById('customDomain').value;
+        }
+
+        // Get the text input's value
+        var text = document.getElementById('message').value;
+
+        // Call the appropriate send function based on the selected method
+        if (sendMethod === 'websocket') {
+            if (socket.readyState === WebSocket.OPEN) {
+                sendWebSocket(text);
+            } else {
+                console.error('WebSocket is not open');
+                socket = new WebSocket('ws://' + domain);
+                sendWebSocket(text);
+            }
+        } else {
+            sendHTTP(sendMethod.toUpperCase(), text, domain);
+        }
+        addLogEntry(text);
+
+        document.getElementById('message').value = '';
+    });
+
+    // Update the sendHTTP function to accept a domain parameter
+    function sendHTTP(method = 'POST', text, domain) {
+        const url = `http://${domain}`;
+        const data = { message: text };
+
+        fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+    }
+
+    function sendWebSocket(text) {
+        const data = { message: document.getElementById('message').value };
+        socket.send(JSON.stringify(data));
+    }
+
+    function addLogEntry(message) {
+        const table = document.getElementById("logTable");
+        const row = table.insertRow(-1); // Insert a row at the end of the table
+        const timestampCell = row.insertCell(0);
+        const messageCell = row.insertCell(1);
+
+        // Format the current timestamp
+        const now = new Date();
+        const formattedTimestamp = now.toLocaleString(); // Customize this format as needed
+
+        // Set cell values
+        timestampCell.textContent = formattedTimestamp;
+        messageCell.textContent = message;
+
+        // Scroll to the bottom of the table container
+        const tableContainer = document.querySelector('.table-container');
+        tableContainer.scrollTop = tableContainer.scrollHeight;
+    }
+
+    // Example usage (replace this part with your actual message sending logic)
+    document.addEventListener('DOMContentLoaded', () => {
+        // Simulate adding a log entry
+        // You should call addLogEntry(message) whenever a message is successfully sent
+        //addLogEntry("Hello, NetNote!");
+    });
+
+</script>
 
 </html>
