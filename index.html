@@ -89,6 +89,54 @@
             width: 100%;
             background-color: #222;
         }
+
+        code {
+            background-color: #222;
+            /* Dark background */
+            color: #74ff55;
+            /* Neon green text */
+            padding: 10px;
+            font-family: 'Courier New', Courier, monospace;
+            /* Cyberpunk-ish font */
+        }
+
+        a {
+            color: #ff5555;
+            /* Neon red text */
+        }
+
+        /* Clear Cache Button Style */
+        #resetButton {
+            background-color: #4caf4f9f;
+            /* Green background */
+            color: white;
+            /* White text */
+            border: none;
+            /* No border */
+            padding: 10px 20px;
+            /* Padding around the text */
+            text-align: center;
+            /* Center the text */
+            text-decoration: none;
+            /* No underline */
+            display: inline-block;
+            /* Inline-block element */
+            font-size: 14px;
+            /* Text size */
+            margin: 4px 2px;
+            /* Margin around the button */
+            cursor: pointer;
+            /* Pointer cursor on hover */
+            border-radius: 5px;
+            /* Rounded corners */
+            transition: background-color 0.3s;
+            /* Smooth background color change on hover */
+        }
+
+        #resetButton:hover {
+            background-color: #45a049;
+            /* Darker green background on hover */
+        }
     </style>
 
 </head>
@@ -112,6 +160,10 @@
         </table>
     </div>
 
+    <button id="resetButton" title="Clear Cache">
+        Clear Cache
+    </button>
+
     <form id="message_form" style="margin-top: 50px; margin-bottom: 50px;">
         <div style="text-align: center;">
             <textarea id="message" name="message" style="height: 50%; width: 90%;" rows="4"
@@ -128,8 +180,8 @@
     <!-- Send Method Selection -->
     <fieldset>
         <legend>Send Method:</legend>
-        <label><input type="radio" name="sendMethod" value="websocket"> WebSocket</label>
-        <label><input type="radio" name="sendMethod" value="POST" checked> HTTP POST</label>
+        <label><input type="radio" name="sendMethod" value="websocket" id="send_websocket"> WebSocket</label>
+        <label><input type="radio" name="sendMethod" value="POST" id="send_post" checked> HTTP POST</label>
         <!--
         <label><input type="radio" name="sendMethod" value="GET" disabled> HTTP GET</label>
         <label><input type="radio" name="sendMethod" value="OPTIONS" disabled> HTTP OPTIONS</label>
@@ -163,7 +215,7 @@
 
     <h2>How to see the notes in network traffic?</h2>
 
-    <code>sudo tcpdump -i any -A | grep -a "netnote_message"</code>
+    <code>sudo tcpdump -i [network device] -A | grep -a "netnote_message"</code>
 
     <h2>How it works?</h2>
 
@@ -178,6 +230,10 @@
 
     <h2>Is it safe?</h2>
 
+    This site has no tracking, cookies, or any other form of user monitoring. All messages are sent by your browser, so
+    apart from the server you selected, there is no servers or backend to store or collect the messages.
+    <br>
+    <br>
     There is no encryption applied on the sent message. This means that everything you type is sent in plain text. This
     is a security risk, as anyone can read the messages you send.
     <br>
@@ -259,6 +315,7 @@
                 let domain = document.querySelector('input[name="domainSelection"]:checked').value;
                 if (domain === 'custom') {
                     domain = document.getElementById('customDomain').value;
+                    saveUrl(domain);
                 }
                 socket.close(); // Close the existing socket
                 socket = new WebSocket('ws://' + domain); // Create a new socket
@@ -272,6 +329,8 @@
 
         // Determine the selected send method
         const sendMethod = document.querySelector('input[name="sendMethod"]:checked').value;
+        const selectedSendMethodID = document.querySelector('input[name="sendMethod"]:checked').id;
+        saveOption(selectedSendMethodID);
 
         // Determine the selected domain or custom domain
         let domain = document.querySelector('input[name="domainSelection"]:checked').value;
@@ -296,8 +355,24 @@
         }
         addLogEntry(text);
 
+        const now = new Date();
+        const messageObject = { text: text, timestamp: now };
+
+        // Save message with timestamp to history
+        const messageHistory = JSON.parse(localStorage.getItem('messageHistory')) || [];
+        messageHistory.push(messageObject);
+        localStorage.setItem('messageHistory', JSON.stringify(messageHistory));
+
         document.getElementById('message').value = '';
     });
+
+    function saveOption(selectedOption) {
+        localStorage.setItem('selectedOption', selectedOption);
+    }
+
+    function saveUrl(customUrl) {
+        localStorage.setItem('customUrl', customUrl);
+    }
 
     // Update the sendHTTP function to accept a domain parameter
     function sendHTTP(method = 'POST', text, domain) {
@@ -326,6 +401,7 @@
         socket.send(JSON.stringify(data));
     }
 
+    /*
     function addLogEntry(message) {
         const table = document.getElementById("logTable");
         const row = table.insertRow(-1); // Insert a row at the end of the table
@@ -344,12 +420,60 @@
         const tableContainer = document.querySelector('.table-container');
         tableContainer.scrollTop = tableContainer.scrollHeight;
     }
+    */
 
-    // Example usage (replace this part with your actual message sending logic)
+    document.getElementById('resetButton').addEventListener('click', function () {
+        // Clear local storage
+        localStorage.clear();
+
+        // reload page
+        location.reload();
+    });
+
+    function displayMessageWithTimestamp(message, timestamp) {
+        // Convert timestamp string back to Date object
+        const messageDate = new Date(timestamp);
+        const formattedTimestamp = messageDate.toLocaleString(); // Customize this format as needed
+
+        // Display the message along with its timestamp
+        // This could involve adding the message and timestamp to the DOM
+        // For example, using the addLogEntry function or similar
+        addLogEntry(message, formattedTimestamp);
+    }
+
+    function addLogEntry(message, timestamp = new Date().toLocaleString()) {
+        const table = document.getElementById("logTable");
+        const row = table.insertRow(-1);
+        const timestampCell = row.insertCell(0);
+        const messageCell = row.insertCell(1);
+
+        timestampCell.textContent = timestamp;
+        messageCell.textContent = message;
+
+        const tableContainer = document.querySelector('.table-container');
+        tableContainer.scrollTop = tableContainer.scrollHeight;
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
-        // Simulate adding a log entry
-        // You should call addLogEntry(message) whenever a message is successfully sent
-        //addLogEntry("Hello, NetNote!");
+        // Load saved data
+        const savedOptionID = localStorage.getItem('selectedOption');
+        const savedUrl = localStorage.getItem('customUrl');
+        const savedMessages = JSON.parse(localStorage.getItem('messageHistory')) || [];
+
+        if (savedOptionID) {
+            document.getElementById(savedOptionID).checked = true;
+
+        }
+
+        if (savedUrl) {
+            document.getElementById('customDomain').value = savedUrl;
+        }
+
+        // Display saved messages with timestamps
+        savedMessages.forEach(messageObject => {
+            // Assuming you have a function to display messages that now also accepts a timestamp
+            displayMessageWithTimestamp(messageObject.text, messageObject.timestamp);
+        });
     });
 
 </script>
