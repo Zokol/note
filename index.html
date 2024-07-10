@@ -163,7 +163,7 @@
 
     <h2>How to see the notes in network traffic?</h2>
 
-
+    <code>sudo tcpdump -i any -A | grep -a "netnote_message"</code>
 
     <h2>How it works?</h2>
 
@@ -302,7 +302,7 @@
     // Update the sendHTTP function to accept a domain parameter
     function sendHTTP(method = 'POST', text, domain) {
         const url = `http://${domain}`;
-        const data = { message: text };
+        const data = { netnote_message: text };
 
         fetch(url, {
             method: method,
@@ -322,7 +322,7 @@
     }
 
     function sendWebSocket(text) {
-        const data = { message: document.getElementById('message').value };
+        const data = { netnote_message: document.getElementById('message').value };
         socket.send(JSON.stringify(data));
     }
 
